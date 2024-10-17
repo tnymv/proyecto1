@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de la Orden de Compra</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Detalle de la Orden de Compra {{ orden.numero_orden }}</h1>
+
+        <h3>Proveedor: {{ orden.proveedor }}</h3>
+        <p>Fecha de la Orden: {{ orden.fecha_creacion }}</p>
+        <p>Estado de la Orden: {{ orden.estado_orden }}</p>
+
+        <h3>Productos Comprados</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in productos %}
+                <tr>
+                    <td>{{ item.producto.nombre_producto }}</td>
+                    <td>{{ item.cantidad }}</td>
+                    <td>{{ item.precio_compra }}</td>
+                    <td>{{ item.cantidad|floatformat:0 }} x {{ item.precio_compra|floatformat:2 }} = {{ item.cantidad|floatformat:0|floatformat:"0"|add:0.00|floatformat:2 * item.precio_compra|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if orden.estado_orden == 'pendiente' %}
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success">Marcar como Recibida</button>
+        </form>
+        {% else %}
+        <p class="text-success">Esta orden ya ha sido recibida.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

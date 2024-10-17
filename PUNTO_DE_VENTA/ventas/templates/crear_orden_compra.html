@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Orden de Compra</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .form-container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-custom {
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 50px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-custom:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-danger {
+            margin-top: 10px;
+        }
+
+        .product-form {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Registrar Orden de Compra</h1>
+        <div class="form-container mx-auto col-md-10">
+            <form method="post">
+                {% csrf_token %}
+                {{ orden_form.as_p }}
+
+                <h3>Agregar Producto a la Orden</h3>
+                <div id="products-formset">
+                    {{ formset.management_form }}
+                    {% for form in formset %}
+                    <div class="product-form border p-3 mb-3">
+                        <div class="form-row">
+                            <div class="col-md-4">
+                                {{ form.producto }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ form.cantidad }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ form.precio_compra }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ form.DELETE }}
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-danger" onclick="removeProductForm(this)">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button type="button" class="btn btn-primary mb-3" onclick="addProductForm()">Agregar Producto</button>
+                <button type="submit" class="btn btn-success btn-block">Registrar Orden</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const formsetPrefix = 'ordencompraproducto_set';
+
+            // Añadir evento de cambio a todos los selects de producto iniciales
+            const productSelects = document.querySelectorAll(
+                `select[name^="${formsetPrefix}-"][name$="-producto"]`
+            );
+            productSelects.forEach((select) => {
+                select.addEventListener("change", function () {
+                    const productId = this.value;
+                    updatePriceForProduct(productId, this);
+                });
+            });
+        });
+
+        function updatePriceForProduct(productId, selectElement) {
+            if (!productId) return;
+            const url = `/api/producto/${productId}/precio/`;
+
+            fetch(url)
+                .then((response) => response.json())
+                .then((data) => {
+                    const priceInput = selectElement
+                        .closest(".product-form")
+                        .querySelector('input[name$="-precio_compra"]');
+                    if (priceInput) {
+                        priceInput.value = data.precio;
+                    }
+                })
+                .catch((error) =>
+                    console.error("Error al obtener el precio del producto:", error)
+                );
+        }
+
+        function addProductForm() {
+            const formsetPrefix = 'ordencompraproducto_set';
+            const container = document.getElementById("products-formset");
+            const totalForms = document.querySelector(`input[name="${formsetPrefix}-TOTAL_FORMS"]`);
+
+            if (!totalForms) {
+                console.error(`El elemento ${formsetPrefix}-TOTAL_FORMS no se encuentra en el DOM.`);
+                return;
+            }
+
+            const formIdx = totalForms.value;
+
+            // Clonar el primer formulario como plantilla
+            const emptyForm = document.querySelector(".product-form").cloneNode(true);
+            emptyForm.classList.add("border", "p-3", "mb-3");
+
+            // Actualizar los atributos 'name' y 'id' de los campos
+            const regex = new RegExp(`${formsetPrefix}-(\\d+)-`, 'g');
+            emptyForm.innerHTML = emptyForm.innerHTML.replace(regex, `${formsetPrefix}-${formIdx}-`);
+
+            // Limpiar los valores de los inputs
+            emptyForm.querySelectorAll("input, select").forEach((input) => {
+                if (input.type !== "hidden") {
+                    input.value = "";
+                }
+                if (input.name.includes("precio_compra")) {
+                    input.readOnly = true;
+                }
+            });
+
+            // Agregar el event listener al nuevo select de producto
+            const selectElement = emptyForm.querySelector(
+                `select[name^="${formsetPrefix}-"][name$="-producto"]`
+            );
+            if (selectElement) {
+                selectElement.addEventListener("change", function () {
+                    const productId = this.value;
+                    updatePriceForProduct(productId, this);
+                });
+            } else {
+                console.error("No se encontró el select de producto en el formulario clonado.");
+                return;
+            }
+
+            // Agregar el formulario al contenedor
+            container.appendChild(emptyForm);
+
+            // Incrementar el total de formularios
+            totalForms.value = parseInt(totalForms.value) + 1;
+        }
+
+        function removeProductForm(button) {
+            const form = button.closest(".product-form");
+            form.remove();
+
+            // Actualizar el TOTAL_FORMS
+            const formsetPrefix = 'ordencompraproducto_set';
+            const totalForms = document.querySelector(
+                `input[name="${formsetPrefix}-TOTAL_FORMS"]`
+            );
+            totalForms.value = parseInt(totalForms.value) - 1;
+
+            // Reindexar los formularios
+            const forms = document.querySelectorAll('.product-form');
+            forms.forEach((form, index) => {
+                const regex = new RegExp(`${formsetPrefix}-(\\d+)-`, 'g');
+                form.innerHTML = form.innerHTML.replace(regex, `${formsetPrefix}-${index}-`);
+            });
+        }
+    </script>
+</body>
+</html>

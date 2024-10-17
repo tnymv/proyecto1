@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del Pedido</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Detalle del Pedido {{ pedido.numero_pedido }}</h1>
+
+        <h3>Cliente: {{ pedido.cliente }}</h3>
+        <p>Fecha del Pedido: {{ pedido.fecha_pedido }}</p>
+        <p>Estado del Pedido: {{ pedido.estado_pedido }}</p>
+
+        <h3>Productos en el Pedido</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in productos %}
+                <tr>
+                    <td>{{ item.producto.nombre_producto }}</td>
+                    <td>{{ item.cantidad }}</td>
+                    <td>{{ item.precio }}</td>
+                    <td>{{ item.precio|floatformat:2|floatformat:"0"|add:0.00|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if pedido.estado_pedido == 'pendiente' %}
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success">Marcar como Completado</button>
+        </form>
+        {% else %}
+        <p class="text-success">Este pedido ya ha sido completado.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

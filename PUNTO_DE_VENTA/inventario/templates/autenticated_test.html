@@ -1,0 +1,6 @@
+{% if user.is_authenticated %}
+        <p>Hola, {{ user.username }}!</p>
+        <p>Este contenido está disponible solo para usuarios autenticados.</p>
+    {% else %}
+        <p>Debes <a href="{% url 'login' %}">iniciar sesión</a> para ver este contenido.</p>
+    {% endif %}

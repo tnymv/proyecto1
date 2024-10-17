@@ -1,0 +1,16 @@
+<html>
+<head>
+    <title>Lista Usuarios</title>
+</head>
+<body>
+    <h1>Listado de Usuarios</h1>
+        {% for item in usuarios %}
+            <li>ID: {{ item.id_usuario }} -- 
+                Nombre: {{ item.nombre }} --
+                Nacimiento: {{ item.fecha_nacimiento }} --
+                Edad: {{ item.edad }}</li>
+        {% empty %}
+            <li>No hay usuarios para mostrar.</li>
+        {% endfor %}  
+</body>
+</html>
